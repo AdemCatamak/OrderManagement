@@ -5,6 +5,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="MassTransit.EntityFrameworkCore" Version="6.3.2" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.5" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="3.1.5" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.5" />
@@ -15,9 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Enum" />
       <Folder Include="Migrations" />
-      <Folder Include="Models\ModelConfigs" />
     </ItemGroup>
 
 </Project>

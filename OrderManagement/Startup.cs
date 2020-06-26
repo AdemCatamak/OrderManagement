@@ -1,14 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Reflection;
 using GreenPipes;
 using HealthChecks.UI.Client;
 using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -18,11 +15,9 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using OrderManagement.Api.Controllers;
 using OrderManagement.Api.WebMiddleware;
-using OrderManagement.Business;
 using OrderManagement.ConfigSection;
 using OrderManagement.ConfigSection.ConfigModels;
 using OrderManagement.Data;
-using OrderManagement.Exceptions;
 using OrderManagement.HostedServices;
 using OrderManagement.MassTransitObservers;
 using OrderManagement.Utility.IntegrationEventPublisherSection;
@@ -45,19 +40,6 @@ namespace OrderManagement
                                                               .AllowAnyOrigin();
                                                    });
                              });
-
-            Assembly startupAssembly = typeof(Startup).Assembly;
-            Assembly apiAssembly = typeof(HomeController).Assembly;
-            Assembly consumersAssembly = null; //typeof(StockCreatorConsumer).Assembly;
-            Assembly businessAssembly = typeof(IBusinessService).Assembly;
-            Assembly dataAssembly = typeof(DataContext).Assembly;
-            Assembly exceptionAssembly = typeof(BaseException).Assembly;
-            Assembly utilityAssembly = typeof(IIntegrationEventPublisher).Assembly;
-
-            var allAssemblyList = new List<Assembly>
-                                  {
-                                      startupAssembly, apiAssembly, businessAssembly, dataAssembly, exceptionAssembly, utilityAssembly, consumersAssembly
-                                  };
 
             services.AddControllers()
                     .AddNewtonsoftJson(options =>
@@ -108,8 +90,6 @@ namespace OrderManagement
 
             services.AddMassTransit(configurator =>
                                     {
-                                        configurator.AddConsumers(consumersAssembly);
-
                                         void ConfigureMassTransit(IBusFactoryConfigurator cfg)
                                         {
                                             cfg.UseConcurrencyLimit(massTransitConfigModel.ConcurrencyLimit);
@@ -118,8 +98,8 @@ namespace OrderManagement
 
                                         void BindConsumer(IBusControl busControl, IServiceProvider provider)
                                         {
-                                            // busControl.ConnectReceiveEndpoint($"{Program.STARTUP_PROJECT_NAME}.{nameof(StockCreatorConsumer)}",
-                                            //                                   endpointConfigurator => { endpointConfigurator.Consumer<StockCreatorConsumer>(provider); });
+                                            // busControl.ConnectReceiveEndpoint($"{Program.STARTUP_PROJECT_NAME}.{nameof(OrderStateMachine)}",
+                                            //                                   endpointConfigurator => { endpointConfigurator.StateMachineSaga<OrderStateModel>(provider); });
                                         }
 
                                         configurator.AddBus(provider =>
@@ -207,7 +187,7 @@ namespace OrderManagement
             #endregion
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app)
         {
             app.UseMiddleware<GeneralExceptionHandlerMiddleware>();
             app.Use((async (httpContext, next) =>
@@ -220,6 +200,7 @@ namespace OrderManagement
                          httpContext.TraceIdentifier ??= Guid.NewGuid().ToString();
                          await next();
                      }));
+            app.UseMiddleware<TransactionMiddleware>();
 
             app.UseStaticFiles();
             app.UseSwagger();

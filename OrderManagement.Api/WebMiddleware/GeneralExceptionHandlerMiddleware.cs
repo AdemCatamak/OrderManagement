@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using OrderManagement.Exceptions;
-using ErrorHttpResponse = OrderManagement.Api.Contracts.Responses.ErrorHttpResponse;
 
 namespace OrderManagement.Api.WebMiddleware
 {
@@ -98,6 +97,18 @@ namespace OrderManagement.Api.WebMiddleware
 
                 return message;
             }
+        }
+
+        public class ErrorHttpResponse
+        {
+            public ErrorHttpResponse(string friendlyMessage, string exceptionType = null)
+            {
+                FriendlyMessage = friendlyMessage ?? throw new ArgumentNullException(nameof(friendlyMessage));
+                ExceptionType = exceptionType;
+            }
+
+            public string FriendlyMessage { get; }
+            public string ExceptionType { get; }
         }
     }
 }

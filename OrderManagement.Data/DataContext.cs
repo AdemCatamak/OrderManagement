@@ -14,5 +14,7 @@ namespace OrderManagement.Data
             modelBuilder.ApplyConfigurationsFromAssembly(this.GetType().Assembly);
             base.OnModelCreating(modelBuilder);
         }
+
+        public virtual DbSet<OrderModel> OrderModels { get; set; }
     }
 }

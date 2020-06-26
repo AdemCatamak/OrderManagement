@@ -13,8 +13,4 @@
       <ProjectReference Include="..\OrderManagement.Exceptions\OrderManagement.Exceptions.csproj" />
       <ProjectReference Include="..\OrderManagement.Utility\OrderManagement.Utility.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Mappings" />
-    </ItemGroup>
 </Project>

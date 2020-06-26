@@ -14,8 +14,7 @@ namespace OrderManagement.Business.OrderServiceSection.Mappings
                                                   orderModel.UpdatedOn,
                                                   orderModel.BuyerName,
                                                   orderModel.BuyerAddress,
-                                                  orderModel.TotalAmount,
-                                                  orderModel.OrderState);
+                                                  orderModel.TotalAmount);
 
             return orderResponse;
         }

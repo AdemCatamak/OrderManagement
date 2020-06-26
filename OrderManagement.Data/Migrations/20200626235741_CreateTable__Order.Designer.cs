@@ -10,7 +10,7 @@ using OrderManagement.Data;
 namespace OrderManagement.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20200626231613_CreateTable__Order")]
+    [Migration("20200626235741_CreateTable__Order")]
     partial class CreateTable__Order
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -38,9 +38,6 @@ namespace OrderManagement.Data.Migrations
 
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("datetime2");
-
-                    b.Property<int>("OrderState")
-                        .HasColumnType("int");
 
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("decimal(18,2)");

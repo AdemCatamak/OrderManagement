@@ -16,7 +16,6 @@ namespace OrderManagement.Data.Models.ModelConfigs
             builder.Property(m => m.CreatedOn).IsRequired();
             builder.Property(m => m.TotalAmount).IsRequired();
             builder.Property(m => m.UpdatedOn).IsRequired();
-            builder.Property(m => m.OrderState).IsRequired();
 
             builder.Property(m => m.UpdatedOn).IsRowVersion();
         }

@@ -1,5 +1,4 @@
 using System;
-using OrderManagement.Data.Enum;
 using OrderManagement.Data.Models.BaseModels;
 
 namespace OrderManagement.Data.Models
@@ -14,14 +13,13 @@ namespace OrderManagement.Data.Models
         public string BuyerName { get; private set; }
         public string BuyerAddress { get; private set; }
         public decimal TotalAmount { get; private set; }
-        public OrderStates OrderState { get; private set; }
 
         public OrderModel(string buyerName, string buyerAddress, decimal totalAmount)
-            : this(default, DateTime.UtcNow, DateTime.UtcNow, buyerAddress, buyerAddress, totalAmount, OrderStates.OrderCreated)
+            : this(default, DateTime.UtcNow, DateTime.UtcNow, buyerAddress, buyerAddress, totalAmount)
         {
         }
 
-        public OrderModel(long id, DateTime createdOn, DateTime updatedOn, string buyerName, string buyerAddress, decimal totalAmount, OrderStates orderState)
+        public OrderModel(long id, DateTime createdOn, DateTime updatedOn, string buyerName, string buyerAddress, decimal totalAmount)
         {
             Id = id;
             CreatedOn = createdOn;
@@ -29,7 +27,6 @@ namespace OrderManagement.Data.Models
             BuyerName = buyerName;
             BuyerAddress = buyerAddress;
             TotalAmount = totalAmount;
-            OrderState = orderState;
         }
     }
 }

@@ -17,8 +17,7 @@ namespace OrderManagement.Data.Migrations
                     UpdatedOn = table.Column<DateTime>(nullable: false),
                     BuyerName = table.Column<string>(nullable: false),
                     BuyerAddress = table.Column<string>(nullable: false),
-                    TotalAmount = table.Column<decimal>(nullable: false),
-                    OrderState = table.Column<int>(nullable: false)
+                    TotalAmount = table.Column<decimal>(nullable: false)
                 },
                 constraints: table =>
                 {

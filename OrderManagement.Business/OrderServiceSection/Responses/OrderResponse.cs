@@ -4,16 +4,16 @@ namespace OrderManagement.Business.OrderServiceSection.Responses
 {
     public class OrderResponse
     {
-        public long Id { get; private set; }
-        public DateTime CreatedOn { get; private set; }
-        public DateTime UpdatedOn { get; private set; }
-        public string BuyerName { get; private set; }
-        public string BuyerAddress { get; private set; }
-        public decimal TotalAmount { get; private set; }
+        public Guid OrderId { get; }
+        public DateTime CreatedOn { get; }
+        public DateTime UpdatedOn { get; }
+        public string BuyerName { get; }
+        public string BuyerAddress { get; }
+        public decimal TotalAmount { get; }
 
-        public OrderResponse(long id, DateTime createdOn, DateTime updatedOn, string buyerName, string buyerAddress, decimal totalAmount)
+        public OrderResponse(Guid orderId, DateTime createdOn, DateTime updatedOn, string buyerName, string buyerAddress, decimal totalAmount)
         {
-            Id = id;
+            OrderId = orderId;
             CreatedOn = createdOn;
             UpdatedOn = updatedOn;
             BuyerName = buyerName;

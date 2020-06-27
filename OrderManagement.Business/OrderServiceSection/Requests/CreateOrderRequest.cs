@@ -4,9 +4,9 @@ namespace OrderManagement.Business.OrderServiceSection.Requests
 {
     public class CreateOrderRequest 
     {
-        public string BuyerName { get; private set; }
-        public string BuyerAddress { get; private set; }
-        public decimal TotalAmount { get; private set; }
+        public string BuyerName { get; }
+        public string BuyerAddress { get; }
+        public decimal TotalAmount { get; }
 
         public CreateOrderRequest(string buyerName, string buyerAddress, decimal totalAmount)
         {

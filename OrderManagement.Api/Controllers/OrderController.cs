@@ -30,5 +30,22 @@ namespace OrderManagement.Api.Controllers
 
             return StatusCode((int) HttpStatusCode.Created, orderResponse);
         }
+
+        [HttpGet("orders")]
+        public async Task<IActionResult> GetOrders([FromQuery] GetOrdersRequest getOrdersRequest)
+        {
+            QueryOrderRequest queryOrderRequest = getOrdersRequest != null
+                                                      ? new QueryOrderRequest(getOrdersRequest.Offset,
+                                                                              getOrdersRequest.Take
+                                                                             )
+                                                        {
+                                                            OrderId = getOrdersRequest.OrderId
+                                                        }
+                                                      : null;
+
+            OrderCollectionResponse orderCollectionResponse = await _orderService.QueryOrderAsync(queryOrderRequest);
+
+            return StatusCode((int) HttpStatusCode.OK, orderCollectionResponse);
+        }
     }
 }

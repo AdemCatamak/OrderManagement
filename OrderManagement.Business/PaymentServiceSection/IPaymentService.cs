@@ -4,6 +4,7 @@ namespace OrderManagement.Business.PaymentServiceSection
 {
     public interface IPaymentService
     {
-        Task TakePayment(string buyerName, decimal totalAmount);
+        Task TakePaymentAsync(string correlationId, decimal totalAmount);
+        Task RefundAsync(string correlationId);
     }
 }

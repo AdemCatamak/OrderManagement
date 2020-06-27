@@ -15,9 +15,15 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using OrderManagement.Api.Controllers;
 using OrderManagement.Api.WebMiddleware;
+using OrderManagement.Business.BillingServiceSection;
+using OrderManagement.Business.OrderServiceSection;
+using OrderManagement.Business.PaymentServiceSection;
+using OrderManagement.Business.ShipmentServiceSection;
 using OrderManagement.ConfigSection;
 using OrderManagement.ConfigSection.ConfigModels;
+using OrderManagement.Consumers;
 using OrderManagement.Data;
+using OrderManagement.Data.Models;
 using OrderManagement.HostedServices;
 using OrderManagement.MassTransitObservers;
 using OrderManagement.Utility.IntegrationEventPublisherSection;
@@ -90,19 +96,22 @@ namespace OrderManagement
 
             services.AddMassTransit(configurator =>
                                     {
+                                        configurator.AddSagaStateMachine<OrderStateMachine, OrderModel>()
+                                                    .EntityFrameworkRepository(repositoryConfigurator => { repositoryConfigurator.ExistingDbContext<DataContext>(); });
+
                                         void ConfigureMassTransit(IBusFactoryConfigurator cfg)
                                         {
                                             cfg.UseConcurrencyLimit(massTransitConfigModel.ConcurrencyLimit);
                                             cfg.UseRetry(retryConfigurator => retryConfigurator.SetRetryPolicy(filter => filter.Incremental(massTransitConfigModel.RetryLimitCount, TimeSpan.FromSeconds(massTransitConfigModel.InitialIntervalSeconds), TimeSpan.FromSeconds(massTransitConfigModel.IntervalIncrementSeconds))));
                                         }
 
-                                        void BindConsumer(IBusControl busControl, IServiceProvider provider)
+                                        void BindConsumer(IReceiveConnector receiveConnector, IRegistrationContext<IServiceProvider> registrationContext)
                                         {
-                                            // busControl.ConnectReceiveEndpoint($"{Program.STARTUP_PROJECT_NAME}.{nameof(OrderStateMachine)}",
-                                            //                                   endpointConfigurator => { endpointConfigurator.StateMachineSaga<OrderStateModel>(provider); });
+                                            receiveConnector.ConnectReceiveEndpoint($"{Program.STARTUP_PROJECT_NAME}.{nameof(OrderStateMachine)}",
+                                                                                    endpointConfigurator => { endpointConfigurator.ConfigureSaga(registrationContext.Container); });
                                         }
 
-                                        configurator.AddBus(provider =>
+                                        configurator.AddBus(registrationContext =>
                                                             {
                                                                 IHost host = null;
                                                                 IBusControl busControl = massTransitOption.BrokerType switch
@@ -122,19 +131,19 @@ namespace OrderManagement
                                                                                              _ => throw new ArgumentOutOfRangeException()
                                                                                          };
 
-                                                                BindConsumer(busControl, provider.Container);
+                                                                BindConsumer(busControl, registrationContext);
 
-                                                                foreach (IConsumeObserver observer in provider.Container.GetServices<IConsumeObserver>())
+                                                                foreach (IConsumeObserver observer in registrationContext.Container.GetServices<IConsumeObserver>())
                                                                 {
                                                                     host.ConnectConsumeObserver(observer);
                                                                 }
 
-                                                                foreach (ISendObserver observer in provider.Container.GetServices<ISendObserver>())
+                                                                foreach (ISendObserver observer in registrationContext.Container.GetServices<ISendObserver>())
                                                                 {
                                                                     host.ConnectSendObserver(observer);
                                                                 }
 
-                                                                foreach (IPublishObserver observer in provider.Container.GetServices<IPublishObserver>())
+                                                                foreach (IPublishObserver observer in registrationContext.Container.GetServices<IPublishObserver>())
                                                                 {
                                                                     host.ConnectPublishObserver(observer);
                                                                 }
@@ -183,6 +192,15 @@ namespace OrderManagement
                                       setup.AddHealthCheckEndpoint("OrderManagement Project", $"{AppConfigs.AppUrls().First()}/healthz");
                                   })
                .AddInMemoryStorage();
+
+            #endregion
+
+            #region BusinessService
+
+            services.AddScoped<IOrderService, OrderService>();
+            services.AddScoped<IPaymentService, PaymentService>();
+            services.AddScoped<IBillingService, BillingService>();
+            services.AddScoped<IShipmentService, ShipmentService>();
 
             #endregion
         }

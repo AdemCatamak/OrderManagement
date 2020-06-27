@@ -22,6 +22,7 @@ namespace OrderManagement.Consumers
         {
             InstanceState(x => x.OrderState);
 
+
             Event(() => OrderCreated, x => x.CorrelateById(context => context.Message.OrderResponse.OrderId));
             Event(() => PaymentCompleted, x => x.CorrelateById(context => context.Message.OrderId));
             Event(() => PaymentFailed, x => x.CorrelateById(context => context.Message.OrderId));
@@ -29,7 +30,8 @@ namespace OrderManagement.Consumers
             Event(() => ShipmentDelivered, x => x.CorrelateById(context => context.Message.OrderId));
             Event(() => ShipmentReturned, x => x.CorrelateById(context => context.Message.OrderId));
 
-            During(OrderCreatedState,
+
+            During(Initial,
                    When(OrderCreated)
                       .ThenAsync(async context =>
                                  {
@@ -62,7 +64,7 @@ namespace OrderManagement.Consumers
                                  {
                                      BillingProcessCompletedEvent billingProcessCompletedEvent = context.Data;
                                      OrderResponse orderResponse = await orderService.GetOrderAsync(billingProcessCompletedEvent.OrderId);
-                                     await shipmentService.CreateShipmentAsync(orderResponse.OrderId.ToString(),orderResponse.BuyerName, orderResponse.BuyerAddress);
+                                     await shipmentService.CreateShipmentAsync(orderResponse.OrderId.ToString(), orderResponse.BuyerName, orderResponse.BuyerAddress);
                                  })
                       .TransitionTo(ShipmentProcessTriggeredState)
                   );
@@ -109,15 +111,15 @@ namespace OrderManagement.Consumers
 
         #region Events
 
-        public Event<OrderCreatedEvent> OrderCreated { get; private set; }
+        public Event<OrderCreatedEvent> OrderCreated { get; set; }
 
-        public Event<PaymentProcessCompletedEvent> PaymentCompleted { get; private set; }
-        public Event<PaymentProcessFailedEvent> PaymentFailed { get; private set; }
+        public Event<PaymentProcessCompletedEvent> PaymentCompleted { get; set; }
+        public Event<PaymentProcessFailedEvent> PaymentFailed { get; set; }
 
-        public Event<BillingProcessCompletedEvent> BillingCompleted { get; private set; }
+        public Event<BillingProcessCompletedEvent> BillingCompleted { get; set; }
 
-        public Event<ShipmentDeliveredEvent> ShipmentDelivered { get; private set; }
-        public Event<ShipmentReturnedEvent> ShipmentReturned { get; private set; }
+        public Event<ShipmentDeliveredEvent> ShipmentDelivered { get; set; }
+        public Event<ShipmentReturnedEvent> ShipmentReturned { get; set; }
 
         #endregion
     }

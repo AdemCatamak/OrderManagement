@@ -11,7 +11,7 @@ The project could be executed via _docker-compose_. If you have an IDE which is 
 
 In case of choosing this way to run the project, you can reach swagger screen via _http://localhost:2000_.
 
-Note: Because the sql server needs more time to be ready compared to StockManager-Api, it might take a while for you to reach the endpoints after `docker-compose up` command execution.
+Note: Because the sql server needs more time to be ready compared to OrderManagement-Api, it might take a while for you to reach the endpoints after `docker-compose up` command execution.
 
 __Way 2__
 
@@ -23,4 +23,3 @@ Changes to be made are:
 
 In the first item if the connection string information is invalid, application will crash immediately. In order to check if the remaining settings are valid, you can use http://localhost:5000/healthchecks_ui endpoint.
 
-<img src="./images/OrderManagement_HealthChecks_UI.png" alt="" width="800px"/>

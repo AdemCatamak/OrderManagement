@@ -94,10 +94,14 @@ namespace OrderManagement
             services.AddSingleton<ISendObserver, BasicSendObserver>();
             services.AddSingleton<IPublishObserver, BasicPublishObserver>();
 
+            services.AddSingleton<TransactionalFilter<ConsumeContext>>();
+
             services.AddMassTransit(configurator =>
                                     {
-                                        void ConfigureMassTransit(IBusFactoryConfigurator cfg)
+                                        void ConfigureMassTransit(IBusFactoryConfigurator cfg, IServiceProvider serviceProvider)
                                         {
+                                            cfg.UseFilter(serviceProvider.GetRequiredService<TransactionalFilter<ConsumeContext>>());
+
                                             cfg.UseConcurrencyLimit(massTransitConfigModel.ConcurrencyLimit);
                                             cfg.UseRetry(retryConfigurator => retryConfigurator.SetRetryPolicy(filter => filter.Incremental(massTransitConfigModel.RetryLimitCount, TimeSpan.FromSeconds(massTransitConfigModel.InitialIntervalSeconds), TimeSpan.FromSeconds(massTransitConfigModel.IntervalIncrementSeconds))));
                                         }
@@ -123,7 +127,7 @@ namespace OrderManagement
                                                                                                                                                  hst.Username(massTransitOption.UserName);
                                                                                                                                                  hst.Password(massTransitOption.Password);
                                                                                                                                              });
-                                                                                                                                    ConfigureMassTransit(cfg);
+                                                                                                                                    ConfigureMassTransit(cfg, registrationContext.Container);
                                                                                                                                 }),
                                                                                              _ => throw new ArgumentOutOfRangeException()
                                                                                          };
@@ -156,7 +160,7 @@ namespace OrderManagement
             services.AddScoped<IIntegrationEventPublisher, IntegrationEventPublisher>();
 
             #endregion
-            
+
             #region BusinessService
 
             services.AddScoped<IOrderService, OrderService>();

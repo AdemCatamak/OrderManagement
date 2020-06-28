@@ -96,56 +96,53 @@ namespace OrderManagement
 
             services.AddMassTransit(configurator =>
                                     {
-                                        configurator.AddSagaStateMachine<OrderStateMachine, OrderModel>()
-                                                    .EntityFrameworkRepository(repositoryConfigurator => { repositoryConfigurator.ExistingDbContext<DataContext>(); });
-
                                         void ConfigureMassTransit(IBusFactoryConfigurator cfg)
                                         {
+                                            cfg.UseInMemoryOutbox();
+
                                             cfg.UseConcurrencyLimit(massTransitConfigModel.ConcurrencyLimit);
                                             cfg.UseRetry(retryConfigurator => retryConfigurator.SetRetryPolicy(filter => filter.Incremental(massTransitConfigModel.RetryLimitCount, TimeSpan.FromSeconds(massTransitConfigModel.InitialIntervalSeconds), TimeSpan.FromSeconds(massTransitConfigModel.IntervalIncrementSeconds))));
                                         }
 
-                                        void BindConsumer(IReceiveConnector receiveConnector, IRegistrationContext<IServiceProvider> registrationContext)
-                                        {
-                                            receiveConnector.ConnectReceiveEndpoint($"{Program.STARTUP_PROJECT_NAME}.{nameof(OrderStateMachine)}",
-                                                                                    endpointConfigurator => { endpointConfigurator.ConfigureSaga(registrationContext.Container); });
-                                        }
+                                        configurator.AddSagaStateMachine<OrderStateMachine, OrderModel>()
+                                                    .EntityFrameworkRepository(repositoryConfigurator => repositoryConfigurator.ExistingDbContext<DataContext>());
 
                                         configurator.AddBus(registrationContext =>
                                                             {
-                                                                IHost host = null;
                                                                 IBusControl busControl = massTransitOption.BrokerType switch
                                                                                          {
                                                                                              MassTransitBrokerTypes.RabbitMq
                                                                                              => Bus.Factory.CreateUsingRabbitMq(cfg =>
                                                                                                                                 {
-                                                                                                                                    host = cfg.Host(massTransitOption.HostName,
-                                                                                                                                                    massTransitOption.VirtualHost,
-                                                                                                                                                    hst =>
-                                                                                                                                                    {
-                                                                                                                                                        hst.Username(massTransitOption.UserName);
-                                                                                                                                                        hst.Password(massTransitOption.Password);
-                                                                                                                                                    });
+                                                                                                                                    cfg.Host(massTransitOption.HostName,
+                                                                                                                                             massTransitOption.VirtualHost,
+                                                                                                                                             hst =>
+                                                                                                                                             {
+                                                                                                                                                 hst.Username(massTransitOption.UserName);
+                                                                                                                                                 hst.Password(massTransitOption.Password);
+                                                                                                                                             });
                                                                                                                                     ConfigureMassTransit(cfg);
                                                                                                                                 }),
                                                                                              _ => throw new ArgumentOutOfRangeException()
                                                                                          };
 
-                                                                BindConsumer(busControl, registrationContext);
+                                                                busControl.ConnectReceiveEndpoint($"{Program.STARTUP_PROJECT_NAME}.{nameof(OrderStateMachine)}",
+                                                                                                  endpointConfigurator => { endpointConfigurator.StateMachineSaga<OrderModel>(registrationContext.Container); });
+
 
                                                                 foreach (IConsumeObserver observer in registrationContext.Container.GetServices<IConsumeObserver>())
                                                                 {
-                                                                    host.ConnectConsumeObserver(observer);
+                                                                    busControl.ConnectConsumeObserver(observer);
                                                                 }
 
                                                                 foreach (ISendObserver observer in registrationContext.Container.GetServices<ISendObserver>())
                                                                 {
-                                                                    host.ConnectSendObserver(observer);
+                                                                    busControl.ConnectSendObserver(observer);
                                                                 }
 
                                                                 foreach (IPublishObserver observer in registrationContext.Container.GetServices<IPublishObserver>())
                                                                 {
-                                                                    host.ConnectPublishObserver(observer);
+                                                                    busControl.ConnectPublishObserver(observer);
                                                                 }
 
                                                                 return busControl;

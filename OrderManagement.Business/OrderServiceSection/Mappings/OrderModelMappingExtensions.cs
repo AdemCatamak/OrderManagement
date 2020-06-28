@@ -9,7 +9,7 @@ namespace OrderManagement.Business.OrderServiceSection.Mappings
         {
             if (orderModel == null) return null;
 
-            var orderResponse = new OrderResponse(orderModel.OrderId,
+            var orderResponse = new OrderResponse(orderModel.Id,
                                                   orderModel.CreatedOn,
                                                   orderModel.UpdatedOn,
                                                   orderModel.BuyerName,

@@ -2,17 +2,17 @@ using System;
 
 namespace OrderManagement.Business.ExternalEvents.PaymentEvents
 {
-    public class PaymentProcessCompletedEvent
+    public class PaymentCompletedEvent
     {
-        public Guid OrderId
+        public long OrderId
         {
-            get => Guid.Parse(CorrelationId);
+            get => long.Parse(CorrelationId);
         }
 
         public string CorrelationId { get; private set; }
         public DateTime PaymentDate { get; private set; }
 
-        public PaymentProcessCompletedEvent(string correlationId, DateTime paymentDate)
+        public PaymentCompletedEvent(string correlationId, DateTime paymentDate)
         {
             CorrelationId = correlationId;
             PaymentDate = paymentDate;

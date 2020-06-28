@@ -1,24 +1,25 @@
-using MassTransit.EntityFrameworkCoreIntegration.Mappings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace OrderManagement.Data.Models.ModelConfigs
 {
-    public class OrderModelConfig : SagaClassMap<OrderModel>
+    public class OrderModelConfig : IEntityTypeConfiguration<OrderModel>
     {
-        protected override void Configure(EntityTypeBuilder<OrderModel> builder, ModelBuilder model)
+        public void Configure(EntityTypeBuilder<OrderModel> builder)
         {
             builder.ToTable("Order");
+
+            builder.HasKey(m => m.Id);
 
             builder.Property(m => m.BuyerAddress).IsRequired();
             builder.Property(m => m.BuyerName).IsRequired();
             builder.Property(m => m.CreatedOn).IsRequired();
             builder.Property(m => m.TotalAmount).IsRequired();
             builder.Property(m => m.UpdatedOn).IsRequired();
+            builder.Property(m => m.OrderState).IsRequired();
+            
 
             builder.Property(m => m.RowVersion).IsRowVersion();
-
-            builder.Ignore(m => m.OrderId);
         }
     }
 }

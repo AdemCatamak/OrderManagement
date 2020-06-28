@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace OrderManagement.Data.Migrations
 {
-    public partial class CreateTable__OrderStateMachine : Migration
+    public partial class CreateTable__Order : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -11,18 +11,19 @@ namespace OrderManagement.Data.Migrations
                 name: "Order",
                 columns: table => new
                 {
-                    CorrelationId = table.Column<Guid>(nullable: false),
+                    Id = table.Column<long>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     CreatedOn = table.Column<DateTime>(nullable: false),
                     UpdatedOn = table.Column<DateTime>(nullable: false),
                     BuyerName = table.Column<string>(nullable: false),
                     BuyerAddress = table.Column<string>(nullable: false),
                     TotalAmount = table.Column<decimal>(nullable: false),
-                    OrderState = table.Column<string>(nullable: true),
+                    OrderState = table.Column<int>(nullable: false),
                     RowVersion = table.Column<byte[]>(rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Order", x => x.CorrelationId);
+                    table.PrimaryKey("PK_Order", x => x.Id);
                 });
         }
 

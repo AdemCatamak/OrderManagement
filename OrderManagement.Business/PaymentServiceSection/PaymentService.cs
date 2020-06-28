@@ -22,12 +22,12 @@ namespace OrderManagement.Business.PaymentServiceSection
             if (totalAmount > 1000)
             {
                 _logger.LogInformation($"{correlationId} - {totalAmount} could not taken from credit card");
-                await _busControl.Publish(new PaymentProcessFailedEvent(correlationId));
+                await _busControl.Publish(new PaymentFailedEvent(correlationId));
             }
             else
             {
                 _logger.LogInformation($"{correlationId} - {totalAmount} is taken from credit card");
-                await _busControl.Publish(new PaymentProcessCompletedEvent(correlationId, DateTime.UtcNow));
+                await _busControl.Publish(new PaymentCompletedEvent(correlationId, DateTime.UtcNow));
             }
         }
 

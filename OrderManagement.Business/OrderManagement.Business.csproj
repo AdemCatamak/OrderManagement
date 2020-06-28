@@ -10,4 +10,8 @@
       <ProjectReference Include="..\OrderManagement.Utility\OrderManagement.Utility.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Stateless" Version="5.1.2" />
+    </ItemGroup>
+
 </Project>

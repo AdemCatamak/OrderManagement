@@ -1,4 +1,3 @@
-using System;
 using OrderManagement.Exceptions;
 
 namespace OrderManagement.Business.OrderServiceSection.Exceptions
@@ -8,7 +7,7 @@ namespace OrderManagement.Business.OrderServiceSection.Exceptions
         public OrderNotFoundException() : base($"Order not found")
         {
         }
-        public OrderNotFoundException(Guid orderId) : base($"Order not found with given id {orderId}")
+        public OrderNotFoundException(long orderId) : base($"Order not found with given id {orderId}")
         {
         }
     }

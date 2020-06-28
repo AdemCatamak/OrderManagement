@@ -4,9 +4,9 @@ namespace OrderManagement.Business.ExternalEvents.PaymentEvents
 {
     public class PaymentRefundedEvent
     {
-        public Guid OrderId
+        public long OrderId
         {
-            get => Guid.Parse(CorrelationId);
+            get => long.Parse(CorrelationId);
         }
 
         public string CorrelationId { get; private set; }

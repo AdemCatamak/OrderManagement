@@ -9,6 +9,7 @@ namespace OrderManagement.ConfigSection
         {
             public const string DbConfig = "DbConfig";
             public const string AppUrls = "AspNetCoreUrls";
+            public const string DistributedLockConfig = "DistributedLockConfig";
             public const string MassTransitConfig = "MassTransitConfig";
         }
 
@@ -27,7 +28,24 @@ namespace OrderManagement.ConfigSection
         {
             configurationBuilder.AddJsonFile("appsettings.json");
         }
-        
+
+        public static DistributedLockConfigModel GetDistributedLockConfigModel()
+        {
+            var distributedLockConfigModel = Configuration.GetSection(ConfigKeys.DistributedLockConfig)
+                                                          .Get<DistributedLockConfigModel>();
+
+            return distributedLockConfigModel;
+        }
+
+        public static DistributedLockOption SelectedDistributedLockOption()
+        {
+            DistributedLockConfigModel distributedLockConfigModel = GetDistributedLockConfigModel();
+
+            DistributedLockOption distributedLockOption = distributedLockConfigModel.SelectedDistributedLockOption();
+
+            return distributedLockOption;
+        }
+
         public static DbConfigModel GetDbConfigModel()
         {
             var dbConfigModel = Configuration.GetSection(ConfigKeys.DbConfig)

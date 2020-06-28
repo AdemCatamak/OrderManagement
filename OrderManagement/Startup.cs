@@ -15,17 +15,17 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using OrderManagement.Api.Controllers;
 using OrderManagement.Api.WebMiddleware;
-using OrderManagement.Business.BillingServiceSection;
 using OrderManagement.Business.OrderServiceSection;
+using OrderManagement.Business.OrderServiceSection.OrderStateMachineSection;
 using OrderManagement.Business.PaymentServiceSection;
 using OrderManagement.Business.ShipmentServiceSection;
 using OrderManagement.ConfigSection;
 using OrderManagement.ConfigSection.ConfigModels;
 using OrderManagement.Consumers;
 using OrderManagement.Data;
-using OrderManagement.Data.Models;
 using OrderManagement.HostedServices;
 using OrderManagement.MassTransitObservers;
+using OrderManagement.Utility.DistributedLockSection;
 using OrderManagement.Utility.IntegrationEventPublisherSection;
 
 namespace OrderManagement
@@ -98,15 +98,17 @@ namespace OrderManagement
                                     {
                                         void ConfigureMassTransit(IBusFactoryConfigurator cfg)
                                         {
-                                            cfg.UseInMemoryOutbox();
-
                                             cfg.UseConcurrencyLimit(massTransitConfigModel.ConcurrencyLimit);
                                             cfg.UseRetry(retryConfigurator => retryConfigurator.SetRetryPolicy(filter => filter.Incremental(massTransitConfigModel.RetryLimitCount, TimeSpan.FromSeconds(massTransitConfigModel.InitialIntervalSeconds), TimeSpan.FromSeconds(massTransitConfigModel.IntervalIncrementSeconds))));
                                         }
 
-                                        configurator.AddSagaStateMachine<OrderStateMachine, OrderModel>()
-                                                    .EntityFrameworkRepository(repositoryConfigurator => repositoryConfigurator.ExistingDbContext<DataContext>());
+                                        void BindEndpoints(IBusControl busControl, IRegistrationContext<IServiceProvider> registrationContext)
+                                        {
+                                            busControl.ConnectReceiveEndpoint($"{Program.STARTUP_PROJECT_NAME}.{nameof(OrderStateOrchestrator)}",
+                                                                              endpointConfigurator => { endpointConfigurator.Consumer<OrderStateOrchestrator>(registrationContext.Container); });
+                                        }
 
+                                        configurator.AddConsumers(typeof(OrderStateOrchestrator).Assembly);
                                         configurator.AddBus(registrationContext =>
                                                             {
                                                                 IBusControl busControl = massTransitOption.BrokerType switch
@@ -126,9 +128,7 @@ namespace OrderManagement
                                                                                              _ => throw new ArgumentOutOfRangeException()
                                                                                          };
 
-                                                                busControl.ConnectReceiveEndpoint($"{Program.STARTUP_PROJECT_NAME}.{nameof(OrderStateMachine)}",
-                                                                                                  endpointConfigurator => { endpointConfigurator.StateMachineSaga<OrderModel>(registrationContext.Container); });
-
+                                                                BindEndpoints(busControl, registrationContext);
 
                                                                 foreach (IConsumeObserver observer in registrationContext.Container.GetServices<IConsumeObserver>())
                                                                 {
@@ -156,12 +156,39 @@ namespace OrderManagement
             services.AddScoped<IIntegrationEventPublisher, IntegrationEventPublisher>();
 
             #endregion
+            
+            #region BusinessService
+
+            services.AddScoped<IOrderService, OrderService>();
+            services.AddScoped<IPaymentService, PaymentService>();
+            services.AddScoped<IShipmentService, ShipmentService>();
+
+            services.AddScoped<IOrderStateMachineFactory, OrderStateMachineFactory>();
+
+            #endregion
+
+            #region DistributedLock
+
+            DistributedLockOption distributedLockOption = AppConfigs.SelectedDistributedLockOption();
+            services.AddSingleton(distributedLockOption);
+
+            IDistributedLockManager distributedLockManager = distributedLockOption.DistributedLockType switch
+                                                             {
+                                                                 DistributedLockTypes.SqlServer => new SqlServerDistributedLockManager(distributedLockOption.ConnectionStr),
+                                                                 _ => throw new ArgumentOutOfRangeException()
+                                                             };
+
+            services.AddSingleton(distributedLockManager);
+
+            #endregion
 
             #region HealthCheck
 
             IHealthChecksBuilder healthChecksBuilder = services.AddHealthChecks();
 
             healthChecksBuilder.AddUrlGroup(new Uri($"{AppConfigs.AppUrls().First()}/health-check"), HttpMethod.Get, name: "HealthCheck Endpoint");
+
+            healthChecksBuilder.AddSqlServer(distributedLockOption.ConnectionStr, name: "Sql Server - Distributed Lock");
 
             switch (dbOption.DbType)
             {
@@ -189,15 +216,6 @@ namespace OrderManagement
                                       setup.AddHealthCheckEndpoint("OrderManagement Project", $"{AppConfigs.AppUrls().First()}/healthz");
                                   })
                .AddInMemoryStorage();
-
-            #endregion
-
-            #region BusinessService
-
-            services.AddScoped<IOrderService, OrderService>();
-            services.AddScoped<IPaymentService, PaymentService>();
-            services.AddScoped<IBillingService, BillingService>();
-            services.AddScoped<IShipmentService, ShipmentService>();
 
             #endregion
         }

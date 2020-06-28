@@ -10,8 +10,8 @@ using OrderManagement.Data;
 namespace OrderManagement.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20200627030753_CreateTable__OrderStateMachine")]
-    partial class CreateTable__OrderStateMachine
+    [Migration("20200628041128_CreateTable__Order")]
+    partial class CreateTable__Order
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -23,8 +23,10 @@ namespace OrderManagement.Data.Migrations
 
             modelBuilder.Entity("OrderManagement.Data.Models.OrderModel", b =>
                 {
-                    b.Property<Guid>("CorrelationId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("BuyerAddress")
                         .IsRequired()
@@ -37,8 +39,8 @@ namespace OrderManagement.Data.Migrations
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("OrderState")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("OrderState")
+                        .HasColumnType("int");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -51,7 +53,7 @@ namespace OrderManagement.Data.Migrations
                     b.Property<DateTime>("UpdatedOn")
                         .HasColumnType("datetime2");
 
-                    b.HasKey("CorrelationId");
+                    b.HasKey("Id");
 
                     b.ToTable("Order");
                 });

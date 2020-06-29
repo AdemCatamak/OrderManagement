@@ -92,7 +92,7 @@ namespace OrderManagement
             // services.AddSingleton<IPublishObserver, BasicPublishObserver>();
 
             services.AddMassTransitHostedService();
-            
+
             services.AddMassTransit(x =>
                                     {
                                         void ConfigureMassTransit(IBusFactoryConfigurator cfg)
@@ -101,10 +101,10 @@ namespace OrderManagement
                                             cfg.UseRetry(retryConfigurator => retryConfigurator.SetRetryPolicy(filter => filter.Incremental(massTransitConfigModel.RetryLimitCount, TimeSpan.FromSeconds(massTransitConfigModel.InitialIntervalSeconds), TimeSpan.FromSeconds(massTransitConfigModel.IntervalIncrementSeconds))));
                                         }
 
-                                        void BindEndpoints(IBusControl busControl, IRegistrationContext<IServiceProvider> registrationContext)
+                                        void BindEndpoints(IBusControl busControl, IRegistration registration)
                                         {
                                             busControl.ConnectReceiveEndpoint($"{Program.STARTUP_PROJECT_NAME}.{nameof(OrderStateOrchestrator)}",
-                                                                              endpointConfigurator => { endpointConfigurator.Consumer<OrderStateOrchestrator>(registrationContext.Container); });
+                                                                              endpointConfigurator => { endpointConfigurator.ConfigureConsumer<OrderStateOrchestrator>(registration); });
                                         }
 
                                         x.AddConsumers(typeof(OrderStateOrchestrator).Assembly);

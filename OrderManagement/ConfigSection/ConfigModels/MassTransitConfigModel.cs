@@ -8,8 +8,6 @@ namespace OrderManagement.ConfigSection.ConfigModels
     {
         public List<MassTransitOption> MassTransitOptions { get; set; }
         public int SelectedIndex { get; set; }
-        public int BusStartStartTimeoutSeconds { get; set; }
-        public int BusStartStopTimeoutSeconds { get; set; }
         public int RetryLimitCount { get; set; }
         public int InitialIntervalSeconds { get; set; }
         public int IntervalIncrementSeconds { get; set; }

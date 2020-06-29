@@ -22,7 +22,6 @@ using OrderManagement.ConfigSection;
 using OrderManagement.ConfigSection.ConfigModels;
 using OrderManagement.Consumers;
 using OrderManagement.Data;
-using OrderManagement.HostedServices;
 using OrderManagement.Utility.DistributedLockSection;
 using OrderManagement.Utility.IntegrationMessagePublisherSection;
 
@@ -58,7 +57,6 @@ namespace OrderManagement
                                        })
                     .AddApplicationPart(typeof(HomeController).Assembly);
 
-            services.AddHostedService<BusControlStarterHostedService>();
 
             #region Swagger
 
@@ -93,6 +91,8 @@ namespace OrderManagement
             // services.AddSingleton<ISendObserver, BasicSendObserver>();
             // services.AddSingleton<IPublishObserver, BasicPublishObserver>();
 
+            services.AddMassTransitHostedService();
+            
             services.AddMassTransit(x =>
                                     {
                                         void ConfigureMassTransit(IBusFactoryConfigurator cfg)

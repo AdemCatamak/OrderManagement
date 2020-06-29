@@ -19,7 +19,8 @@ If you want to execute the project without using docker, it is required that you
 
 Changes to be made are:
 1. DbConfig -> DbOptions -> ConnectionStr value should be changed with the Sql Server connection string that you have.
-2. MassTransitConfig -> MassTransitOptions -> HostName, VirtualHost, Username, Password values should be changed with the RabbitMq platform information that you have.
+2. DistributedLockConfig -> DistributedLockOptions -> ConnectionStr value should be changed with the Sql Server connection string that you have.
+3. MassTransitConfig -> MassTransitOptions -> HostName, VirtualHost, Username, Password values should be changed with the RabbitMq platform information that you have.
 
 In the first item if the connection string information is invalid, application will crash immediately. In order to check if the remaining settings are valid, you can use http://localhost:5000/healthchecks_ui endpoint.
 

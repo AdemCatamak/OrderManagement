@@ -4,7 +4,7 @@ using MassTransit;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace OrderManagement.Consumers.MassTransitMiddlewares
+namespace OrderManagement.Consumers.MassTransitMiddleware
 {
     public class BasicConsumeObserver : IConsumeObserver
     {

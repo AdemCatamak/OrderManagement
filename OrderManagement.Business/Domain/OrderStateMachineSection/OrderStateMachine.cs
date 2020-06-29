@@ -14,7 +14,6 @@ namespace OrderManagement.Business.Domain.OrderStateMachineSection
     public class OrderStateMachine : IOrderStateMachine
     {
         private readonly IIntegrationMessagePublisher _integrationMessagePublisher;
-        private readonly DataContext _dataContext;
 
         private readonly OrderModel _orderModel;
         private readonly StateMachine<OrderStates, OrderActions> _orderStateMachine;
@@ -30,7 +29,6 @@ namespace OrderManagement.Business.Domain.OrderStateMachineSection
         public OrderStateMachine(OrderModel orderModel, IIntegrationMessagePublisher integrationMessagePublisher, DataContext dataContext)
         {
             _integrationMessagePublisher = integrationMessagePublisher;
-            _dataContext = dataContext;
 
             _orderModel = orderModel;
             _orderStateMachine = new StateMachine<OrderStates, OrderActions>((OrderStates) _orderModel.OrderState);
@@ -65,9 +63,9 @@ namespace OrderManagement.Business.Domain.OrderStateMachineSection
             _orderStateMachine.OnTransitioned(transition =>
                                               {
                                                   _orderModel.SetState((int) transition.Destination);
-                                                  _dataContext.SaveChanges();
+                                                  dataContext.SaveChanges();
                                               });
-            _orderStateMachine.OnUnhandledTriggerAsync((states, actions) => throw new InvalidStatusTransitionException(states.ToString(), actions.ToString()));
+            _orderStateMachine.OnUnhandledTrigger((states, actions) => throw new InvalidStatusTransitionException(states.ToString(), actions.ToString()));
         }
 
 

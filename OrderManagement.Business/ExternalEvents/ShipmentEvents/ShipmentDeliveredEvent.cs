@@ -4,19 +4,14 @@ namespace OrderManagement.Business.ExternalEvents.ShipmentEvents
 {
     public class ShipmentDeliveredEvent
     {
-        public long OrderId
-        {
-            get => long.Parse(CorrelationId);
-        }
+        public string CorrelationId { get; }
 
-        public string CorrelationId { get; private set; }
+        public DateTime DeliveredOn { get; }
 
-        public DateTime CompletedOn { get; private set; }
-
-        public ShipmentDeliveredEvent(string correlationId, DateTime completedOn)
+        public ShipmentDeliveredEvent(string correlationId, DateTime deliveredOn)
         {
             CorrelationId = correlationId;
-            CompletedOn = completedOn;
+            DeliveredOn = deliveredOn;
         }
     }
 }

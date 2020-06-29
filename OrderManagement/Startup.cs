@@ -15,18 +15,17 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using OrderManagement.Api.Controllers;
 using OrderManagement.Api.WebMiddleware;
-using OrderManagement.Business.OrderServiceSection;
-using OrderManagement.Business.OrderServiceSection.OrderStateMachineSection;
-using OrderManagement.Business.PaymentServiceSection;
-using OrderManagement.Business.ShipmentServiceSection;
+using OrderManagement.Business.Clients;
+using OrderManagement.Business.Domain.OrderServiceSection;
+using OrderManagement.Business.Domain.OrderStateMachineSection;
 using OrderManagement.ConfigSection;
 using OrderManagement.ConfigSection.ConfigModels;
 using OrderManagement.Consumers;
+using OrderManagement.Consumers.MassTransitMiddlewares;
 using OrderManagement.Data;
 using OrderManagement.HostedServices;
-using OrderManagement.MassTransitObservers;
 using OrderManagement.Utility.DistributedLockSection;
-using OrderManagement.Utility.IntegrationEventPublisherSection;
+using OrderManagement.Utility.IntegrationMessagePublisherSection;
 
 namespace OrderManagement
 {
@@ -90,9 +89,10 @@ namespace OrderManagement
 
             services.AddSingleton(massTransitConfigModel);
 
-            services.AddSingleton<IConsumeObserver, BasicConsumeObserver>();
-            services.AddSingleton<ISendObserver, BasicSendObserver>();
-            services.AddSingleton<IPublishObserver, BasicPublishObserver>();
+            // A lot of log
+            // services.AddSingleton<IConsumeObserver, BasicConsumeObserver>();
+            // services.AddSingleton<ISendObserver, BasicSendObserver>();
+            // services.AddSingleton<IPublishObserver, BasicPublishObserver>();
 
             services.AddSingleton<TransactionalFilter<ConsumeContext>>();
 
@@ -157,15 +157,15 @@ namespace OrderManagement
 
             #region IntegrationEventPublisher
 
-            services.AddScoped<IIntegrationEventPublisher, IntegrationEventPublisher>();
+            services.AddScoped<IIntegrationMessagePublisher, IntegrationMessagePublisher>();
 
             #endregion
 
             #region BusinessService
 
             services.AddScoped<IOrderService, OrderService>();
-            services.AddScoped<IPaymentService, PaymentService>();
-            services.AddScoped<IShipmentService, ShipmentService>();
+            services.AddScoped<IPaymentServiceClient, PaymentServiceClient>();
+            services.AddScoped<IShipmentServiceClient, ShipmentServiceClient>();
 
             services.AddScoped<IOrderStateMachineFactory, OrderStateMachineFactory>();
 

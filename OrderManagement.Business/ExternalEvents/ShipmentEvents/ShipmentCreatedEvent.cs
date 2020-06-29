@@ -1,10 +1,10 @@
 namespace OrderManagement.Business.ExternalEvents.ShipmentEvents
 {
-    public class ShipmentReturnedEvent
+    public class ShipmentCreatedEvent
     {
         public string CorrelationId { get; }
 
-        public ShipmentReturnedEvent(string correlationId)
+        public ShipmentCreatedEvent(string correlationId)
         {
             CorrelationId = correlationId;
         }

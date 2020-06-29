@@ -1,85 +1,168 @@
 using System.Threading.Tasks;
 using MassTransit;
-using OrderManagement.Business.Events;
+using OrderManagement.Business.Clients;
+using OrderManagement.Business.Commands;
+using OrderManagement.Business.Domain.OrderStateMachineSection;
+using OrderManagement.Business.Domain.OrderStateMachineSection.Enums;
 using OrderManagement.Business.ExternalEvents.PaymentEvents;
 using OrderManagement.Business.ExternalEvents.ShipmentEvents;
-using OrderManagement.Business.OrderServiceSection;
-using OrderManagement.Business.OrderServiceSection.OrderStateMachineSection.Enums;
-using OrderManagement.Business.OrderServiceSection.Responses;
 using OrderManagement.Utility.DistributedLockSection;
 
 namespace OrderManagement.Consumers
 {
     public class OrderStateOrchestrator :
-        IConsumer<OrderCreatedEvent>,
+        IConsumer<TakePaymentCommand>,
+        IConsumer<PaymentCreatedEvent>,
         IConsumer<PaymentCompletedEvent>,
         IConsumer<PaymentFailedEvent>,
+        IConsumer<PrepareShipmentCommand>,
+        IConsumer<ShipmentCreatedEvent>,
         IConsumer<ShipmentDeliveredEvent>,
         IConsumer<ShipmentReturnedEvent>,
-        IConsumer<PaymentRefundedEvent>
+        IConsumer<RefundCommand>,
+        IConsumer<RefundStartedEvent>,
+        IConsumer<RefundCompletedEvent>
     {
-        private readonly IOrderService _orderService;
+        private readonly IPaymentServiceClient _paymentServiceClient;
         private readonly IDistributedLockManager _distributedLockManager;
+        private readonly IOrderStateMachineFactory _orderStateMachineFactory;
+        private readonly IShipmentServiceClient _shipmentServiceClient;
 
-        public OrderStateOrchestrator(IOrderService orderService, IDistributedLockManager distributedLockManager)
+        public OrderStateOrchestrator(IPaymentServiceClient paymentServiceClient,
+                                      IDistributedLockManager distributedLockManager,
+                                      IOrderStateMachineFactory orderStateMachineFactory,
+                                      IShipmentServiceClient shipmentServiceClient)
         {
-            _orderService = orderService;
             _distributedLockManager = distributedLockManager;
+            _orderStateMachineFactory = orderStateMachineFactory;
+            _shipmentServiceClient = shipmentServiceClient;
+            _paymentServiceClient = paymentServiceClient;
         }
 
         private static string OrderOperationKey(long orderId) => $"OrderLockKey-{orderId}";
 
-        public async Task Consume(ConsumeContext<OrderCreatedEvent> context)
+        public async Task Consume(ConsumeContext<TakePaymentCommand> context)
         {
-            OrderCreatedEvent orderCreatedEvent = context.Message;
-            OrderResponse orderResponse = orderCreatedEvent.OrderResponse;
+            TakePaymentCommand takePaymentCommand = context.Message;
+            await _paymentServiceClient.TakePaymentAsync(takePaymentCommand.CorrelationId, takePaymentCommand.TotalAmount);
+        }
 
-            await _distributedLockManager.LockAsync(OrderOperationKey(orderResponse.OrderId),
-                                                    async () => { await _orderService.TakePaymentAsync(orderResponse.OrderId); });
+        public async Task Consume(ConsumeContext<PaymentCreatedEvent> context)
+        {
+            PaymentCreatedEvent paymentCreatedEvent = context.Message;
+            long orderId = long.Parse(paymentCreatedEvent.CorrelationId);
+
+            await _distributedLockManager.LockAsync(OrderOperationKey(orderId),
+                                                    async () =>
+                                                    {
+                                                        IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
+                                                        orderStateMachine.SetAsPaymentStarted();
+                                                    });
         }
 
         public async Task Consume(ConsumeContext<PaymentCompletedEvent> context)
         {
             PaymentCompletedEvent paymentCompletedEvent = context.Message;
+            long orderId = long.Parse(paymentCompletedEvent.CorrelationId);
 
-            await _distributedLockManager.LockAsync(OrderOperationKey(paymentCompletedEvent.OrderId),
-                                                    async () => { await _orderService.ChangePaymentProcessStatusAsync(paymentCompletedEvent.OrderId, PaymentStatuses.Completed); });
+            await _distributedLockManager.LockAsync(OrderOperationKey(orderId),
+                                                    async () =>
+                                                    {
+                                                        IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
+                                                        orderStateMachine.ChangePaymentStatus(PaymentStatuses.Completed);
+                                                    });
         }
 
         public async Task Consume(ConsumeContext<PaymentFailedEvent> context)
         {
             PaymentFailedEvent paymentFailedEvent = context.Message;
+            long orderId = long.Parse(paymentFailedEvent.CorrelationId);
 
-            await _distributedLockManager.LockAsync(OrderOperationKey(paymentFailedEvent.OrderId),
-                                                    async () => { await _orderService.ChangePaymentProcessStatusAsync(paymentFailedEvent.OrderId, PaymentStatuses.Failed); }
-                                                   );
+            await _distributedLockManager.LockAsync(OrderOperationKey(orderId),
+                                                    async () =>
+                                                    {
+                                                        IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
+                                                        orderStateMachine.ChangePaymentStatus(PaymentStatuses.Failed);
+                                                    });
+        }
+
+        public async Task Consume(ConsumeContext<PrepareShipmentCommand> context)
+        {
+            PrepareShipmentCommand prepareShipmentCommand = context.Message;
+
+            await _shipmentServiceClient.CreateShipmentAsync(prepareShipmentCommand.CorrelationId, prepareShipmentCommand.ReceiverName, prepareShipmentCommand.ReceiverAddress);
+        }
+
+        public async Task Consume(ConsumeContext<ShipmentCreatedEvent> context)
+        {
+            ShipmentCreatedEvent shipmentCreatedEvent = context.Message;
+            long orderId = long.Parse(shipmentCreatedEvent.CorrelationId);
+
+            await _distributedLockManager.LockAsync(OrderOperationKey(orderId),
+                                                    async () =>
+                                                    {
+                                                        IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
+                                                        orderStateMachine.SetAsOrderShipped();
+                                                    });
         }
 
         public async Task Consume(ConsumeContext<ShipmentDeliveredEvent> context)
         {
             ShipmentDeliveredEvent shipmentDeliveredEvent = context.Message;
+            long orderId = long.Parse(shipmentDeliveredEvent.CorrelationId);
 
-            await _distributedLockManager.LockAsync(OrderOperationKey(shipmentDeliveredEvent.OrderId),
-                                                    async () => { await _orderService.ChangeShipmentStatusAsync(shipmentDeliveredEvent.OrderId, ShipmentStatuses.Delivered); }
-                                                   );
+            await _distributedLockManager.LockAsync(OrderOperationKey(orderId),
+                                                    async () =>
+                                                    {
+                                                        IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
+                                                        orderStateMachine.ChangeShipmentStatus(ShipmentStatuses.Delivered);
+                                                    });
         }
 
         public async Task Consume(ConsumeContext<ShipmentReturnedEvent> context)
         {
             ShipmentReturnedEvent shipmentReturnedEvent = context.Message;
+            long orderId = long.Parse(shipmentReturnedEvent.CorrelationId);
 
-            await _distributedLockManager.LockAsync(OrderOperationKey(shipmentReturnedEvent.OrderId),
-                                                    async () => { await _orderService.ChangeShipmentStatusAsync(shipmentReturnedEvent.OrderId, ShipmentStatuses.Returned); }
-                                                   );
+            await _distributedLockManager.LockAsync(OrderOperationKey(orderId),
+                                                    async () =>
+                                                    {
+                                                        IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
+                                                        orderStateMachine.ChangeShipmentStatus(ShipmentStatuses.Returned);
+                                                    });
         }
 
-        public async Task Consume(ConsumeContext<PaymentRefundedEvent> context)
+        public async Task Consume(ConsumeContext<RefundCommand> context)
         {
-            PaymentRefundedEvent paymentRefundedEvent = context.Message;
+            RefundCommand refundCommand = context.Message;
 
-            await _distributedLockManager.LockAsync(OrderOperationKey(paymentRefundedEvent.OrderId),
-                                                    async () => { await _orderService.SetRefundCompletedAsync(paymentRefundedEvent.OrderId); }
-                                                   );
+            await _paymentServiceClient.RefundAsync(refundCommand.CorrelationId);
+        }
+
+        public async Task Consume(ConsumeContext<RefundStartedEvent> context)
+        {
+            RefundStartedEvent refundStartedEvent = context.Message;
+            long orderId = long.Parse(refundStartedEvent.CorrelationId);
+
+            await _distributedLockManager.LockAsync(OrderOperationKey(orderId),
+                                                    async () =>
+                                                    {
+                                                        IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
+                                                        orderStateMachine.SetAsRefundStarted();
+                                                    });
+        }
+
+        public async Task Consume(ConsumeContext<RefundCompletedEvent> context)
+        {
+            var refundCompletedEvent = context.Message;
+            long orderId = long.Parse(refundCompletedEvent.CorrelationId);
+
+            await _distributedLockManager.LockAsync(OrderOperationKey(orderId),
+                                                    async () =>
+                                                    {
+                                                        IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
+                                                        orderStateMachine.SetAsRefundCompleted();
+                                                    });
         }
     }
 }

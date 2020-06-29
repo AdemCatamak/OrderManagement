@@ -1,4 +1,5 @@
 using System;
+using OrderManagement.Data.Exceptions;
 using OrderManagement.Data.Models.BaseModels;
 
 namespace OrderManagement.Data.Models
@@ -24,6 +25,14 @@ namespace OrderManagement.Data.Models
 
         public OrderModel(long id, DateTime createdOn, DateTime updatedOn, string buyerName, string buyerAddress, decimal totalAmount, int orderState, byte[] rowVersion)
         {
+            buyerName = buyerName?.Trim() ?? string.Empty;
+            if (buyerName == string.Empty) throw new BuyerAddressEmptyException();
+
+            buyerAddress = buyerAddress?.Trim() ?? string.Empty;
+            if (buyerAddress == string.Empty) throw new BuyerAddressEmptyException();
+
+            if (totalAmount < decimal.Zero) throw new OrderAmountNegativeException(totalAmount);
+
             Id = id;
             CreatedOn = createdOn;
             UpdatedOn = updatedOn;

@@ -1,10 +1,10 @@
 namespace OrderManagement.Business.ExternalEvents.PaymentEvents
 {
-    public class PaymentFailedEvent
+    public class RefundStartedEvent
     {
         public string CorrelationId { get; }
 
-        public PaymentFailedEvent(string correlationId)
+        public RefundStartedEvent(string correlationId)
         {
             CorrelationId = correlationId;
         }

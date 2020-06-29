@@ -14,4 +14,9 @@
       <PackageReference Include="Stateless" Version="5.1.2" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Domain" />
+      <Folder Include="Events" />
+    </ItemGroup>
+
 </Project>

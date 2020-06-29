@@ -2,33 +2,35 @@ using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using OrderManagement.Api.Contracts.OrderRequests;
-using OrderManagement.Business.OrderServiceSection;
-using OrderManagement.Business.OrderServiceSection.Requests;
-using OrderManagement.Business.OrderServiceSection.Responses;
+using OrderManagement.Business.Domain.OrderServiceSection;
+using OrderManagement.Business.Domain.OrderServiceSection.Requests;
+using OrderManagement.Business.Domain.OrderServiceSection.Responses;
+using OrderManagement.Business.Domain.OrderStateMachineSection;
+using OrderManagement.Exceptions;
 
 namespace OrderManagement.Api.Controllers
 {
     public class OrderController : ControllerBase
     {
+        private readonly IOrderStateMachineFactory _orderStateMachineFactory;
         private readonly IOrderService _orderService;
 
-        public OrderController(IOrderService orderService)
+        public OrderController(IOrderStateMachineFactory orderStateMachineFactory, IOrderService orderService)
         {
+            _orderStateMachineFactory = orderStateMachineFactory;
             _orderService = orderService;
         }
 
         [HttpPost("orders")]
         public async Task<IActionResult> PostOrder([FromBody] PostOrderRequest postOrderRequest)
         {
-            CreateOrderRequest createOrderRequest = postOrderRequest != null
-                                                        ? new CreateOrderRequest(postOrderRequest.BuyerName,
-                                                                                 postOrderRequest.BuyerAddress,
-                                                                                 postOrderRequest.TotalAmount)
-                                                        : null;
+            if (postOrderRequest == null)
+                throw new RequestNullException();
 
-            OrderResponse orderResponse = await _orderService.CreateOrderAsync(createOrderRequest);
+            IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.CreateOrderStateMachineAsync(postOrderRequest.BuyerName, postOrderRequest.BuyerAddress, postOrderRequest.TotalAmount);
+            orderStateMachine.SubmitOrder();
 
-            return StatusCode((int) HttpStatusCode.Created, orderResponse);
+            return StatusCode((int) HttpStatusCode.Created, orderStateMachine.OrderResponse);
         }
 
         [HttpGet("orders")]

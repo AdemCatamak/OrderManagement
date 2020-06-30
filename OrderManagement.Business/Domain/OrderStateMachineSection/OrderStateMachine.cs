@@ -48,6 +48,7 @@ namespace OrderManagement.Business.Domain.OrderStateMachineSection
 
             _orderStateMachine.Configure(OrderStates.PaymentCompleted)
                               .OnEntry(OnPaymentCompleted)
+                              .PermitReentry(OrderActions.ChangePaymentStatus)
                               .Permit(OrderActions.SetAsOrderShipped, OrderStates.OrderShipped);
 
             _orderStateMachine.Configure(OrderStates.OrderShipped)

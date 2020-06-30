@@ -1,18 +1,12 @@
-using System;
-using System.Data;
 using System.Threading.Tasks;
 using MassTransit;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 using OrderManagement.Business.Clients;
 using OrderManagement.Business.Commands;
 using OrderManagement.Business.Domain.OrderStateMachineSection;
 using OrderManagement.Business.Domain.OrderStateMachineSection.Enums;
 using OrderManagement.Business.ExternalEvents.PaymentEvents;
 using OrderManagement.Business.ExternalEvents.ShipmentEvents;
-using OrderManagement.Data;
 using OrderManagement.Utility.DistributedLockSection;
-using OrderManagement.Utility.IntegrationMessagePublisherSection;
 
 namespace OrderManagement.Consumers
 {
@@ -33,21 +27,15 @@ namespace OrderManagement.Consumers
         private readonly IDistributedLockManager _distributedLockManager;
         private readonly IOrderStateMachineFactory _orderStateMachineFactory;
         private readonly IShipmentServiceClient _shipmentServiceClient;
-        private readonly DataContext _dataContext;
-        private readonly IIntegrationMessagePublisher _integrationMessagePublisher;
 
         public OrderStateOrchestrator(IPaymentServiceClient paymentServiceClient,
                                       IDistributedLockManager distributedLockManager,
                                       IOrderStateMachineFactory orderStateMachineFactory,
-                                      IShipmentServiceClient shipmentServiceClient,
-                                      DataContext dataContext,
-                                      IIntegrationMessagePublisher integrationMessagePublisher)
+                                      IShipmentServiceClient shipmentServiceClient)
         {
             _distributedLockManager = distributedLockManager;
             _orderStateMachineFactory = orderStateMachineFactory;
             _shipmentServiceClient = shipmentServiceClient;
-            _dataContext = dataContext;
-            _integrationMessagePublisher = integrationMessagePublisher;
             _paymentServiceClient = paymentServiceClient;
         }
 
@@ -67,11 +55,8 @@ namespace OrderManagement.Consumers
             await _distributedLockManager.LockAsync(OrderOperationKey(orderId),
                                                     async () =>
                                                     {
-                                                        await TemporaryPipe(async () =>
-                                                                            {
-                                                                                IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
-                                                                                orderStateMachine.SetAsPaymentStarted();
-                                                                            });
+                                                        IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
+                                                        orderStateMachine.SetAsPaymentStarted();
                                                     });
         }
 
@@ -83,11 +68,8 @@ namespace OrderManagement.Consumers
             await _distributedLockManager.LockAsync(OrderOperationKey(orderId),
                                                     async () =>
                                                     {
-                                                        await TemporaryPipe(async () =>
-                                                                            {
-                                                                                IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
-                                                                                orderStateMachine.ChangePaymentStatus(PaymentStatuses.Completed);
-                                                                            });
+                                                        IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
+                                                        orderStateMachine.ChangePaymentStatus(PaymentStatuses.Completed);
                                                     });
         }
 
@@ -100,11 +82,8 @@ namespace OrderManagement.Consumers
             await _distributedLockManager.LockAsync(OrderOperationKey(orderId),
                                                     async () =>
                                                     {
-                                                        await TemporaryPipe(async () =>
-                                                                            {
-                                                                                IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
-                                                                                orderStateMachine.ChangePaymentStatus(PaymentStatuses.Failed);
-                                                                            });
+                                                        IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
+                                                        orderStateMachine.ChangePaymentStatus(PaymentStatuses.Failed);
                                                     }
                                                    );
         }
@@ -124,11 +103,8 @@ namespace OrderManagement.Consumers
             await _distributedLockManager.LockAsync(OrderOperationKey(orderId),
                                                     async () =>
                                                     {
-                                                        await TemporaryPipe(async () =>
-                                                                            {
-                                                                                IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
-                                                                                orderStateMachine.SetAsOrderShipped();
-                                                                            });
+                                                        IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
+                                                        orderStateMachine.SetAsOrderShipped();
                                                     }
                                                    );
         }
@@ -141,11 +117,8 @@ namespace OrderManagement.Consumers
             await _distributedLockManager.LockAsync(OrderOperationKey(orderId),
                                                     async () =>
                                                     {
-                                                        await TemporaryPipe(async () =>
-                                                                            {
-                                                                                IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
-                                                                                orderStateMachine.ChangeShipmentStatus(ShipmentStatuses.Delivered);
-                                                                            });
+                                                        IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
+                                                        orderStateMachine.ChangeShipmentStatus(ShipmentStatuses.Delivered);
                                                     }
                                                    );
         }
@@ -158,11 +131,8 @@ namespace OrderManagement.Consumers
             await _distributedLockManager.LockAsync(OrderOperationKey(orderId),
                                                     async () =>
                                                     {
-                                                        await TemporaryPipe(async () =>
-                                                                            {
-                                                                                IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
-                                                                                orderStateMachine.ChangeShipmentStatus(ShipmentStatuses.Returned);
-                                                                            });
+                                                        IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
+                                                        orderStateMachine.ChangeShipmentStatus(ShipmentStatuses.Returned);
                                                     }
                                                    );
         }
@@ -182,11 +152,8 @@ namespace OrderManagement.Consumers
             await _distributedLockManager.LockAsync(OrderOperationKey(orderId),
                                                     async () =>
                                                     {
-                                                        await TemporaryPipe(async () =>
-                                                                            {
-                                                                                IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
-                                                                                orderStateMachine.SetAsRefundStarted();
-                                                                            });
+                                                        IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
+                                                        orderStateMachine.SetAsRefundStarted();
                                                     }
                                                    );
         }
@@ -199,21 +166,10 @@ namespace OrderManagement.Consumers
             await _distributedLockManager.LockAsync(OrderOperationKey(orderId),
                                                     async () =>
                                                     {
-                                                        await TemporaryPipe(async () =>
-                                                                            {
-                                                                                IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
-                                                                                orderStateMachine.SetAsRefundCompleted();
-                                                                            });
+                                                        IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
+                                                        orderStateMachine.SetAsRefundCompleted();
                                                     }
                                                    );
-        }
-
-        private async Task TemporaryPipe(Func<Task> action)
-        {
-            IDbContextTransaction dbContextTransaction = await _dataContext.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
-            await action();
-            await dbContextTransaction.CommitAsync();
-            await _integrationMessagePublisher.Publish();
         }
     }
 }

@@ -98,18 +98,6 @@ namespace OrderManagement
                                     {
                                         x.AddConsumers(typeof(OrderStateOrchestrator).Assembly);
 
-                                        void ConfigureMassTransit(IBusFactoryConfigurator cfg)
-                                        {
-                                            cfg.UseConcurrencyLimit(massTransitConfigModel.ConcurrencyLimit);
-                                            cfg.UseRetry(retryConfigurator => retryConfigurator.SetRetryPolicy(filter => filter.Incremental(massTransitConfigModel.RetryLimitCount, TimeSpan.FromSeconds(massTransitConfigModel.InitialIntervalSeconds), TimeSpan.FromSeconds(massTransitConfigModel.IntervalIncrementSeconds))));
-                                        }
-
-                                        void BindEndpoints(IBusFactoryConfigurator cfg, IRegistration registration)
-                                        {
-                                            cfg.ReceiveEndpoint($"{Program.STARTUP_PROJECT_NAME}.{nameof(OrderStateOrchestrator)}",
-                                                                              endpointConfigurator => { endpointConfigurator.ConfigureConsumer<OrderStateOrchestrator>(registration); });
-                                        }
-
                                         switch (massTransitOption.BrokerType)
                                         {
                                             case MassTransitBrokerTypes.RabbitMq:
@@ -122,16 +110,16 @@ namespace OrderManagement
                                                                                  hst.Username(massTransitOption.UserName);
                                                                                  hst.Password(massTransitOption.Password);
                                                                              });
-                                                                    ConfigureMassTransit(cfg);
+                                                                    cfg.UseConcurrencyLimit(massTransitConfigModel.ConcurrencyLimit);
+                                                                    cfg.UseRetry(retryConfigurator => retryConfigurator.SetRetryPolicy(filter => filter.Incremental(massTransitConfigModel.RetryLimitCount, TimeSpan.FromSeconds(massTransitConfigModel.InitialIntervalSeconds), TimeSpan.FromSeconds(massTransitConfigModel.IntervalIncrementSeconds))));
                                                                     cfg.UseConsumeFilter(typeof(TransactionFilter<>), context);
-                                                                    // BindEndpoints(cfg,context);
-
+                                                                    cfg.ReceiveEndpoint($"{Program.STARTUP_PROJECT_NAME}.{nameof(OrderStateOrchestrator)}",
+                                                                                        endpointConfigurator => { endpointConfigurator.ConfigureConsumer<OrderStateOrchestrator>(context); });
                                                                 });
                                                 break;
                                             default:
                                                 throw new ArgumentOutOfRangeException();
                                         }
-
                                     });
 
             #endregion

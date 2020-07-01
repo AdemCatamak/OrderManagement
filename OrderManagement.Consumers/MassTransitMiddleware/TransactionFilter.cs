@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using GreenPipes;
 using MassTransit;
@@ -27,6 +28,7 @@ namespace OrderManagement.Consumers.MassTransitMiddleware
             IDbContextTransaction dbContextTransaction = await _dataContext.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
             await next.Send(context);
             await dbContextTransaction.CommitAsync();
+            Console.WriteLine($"TransactionFilter - {typeof(T).Namespace} : {_integrationMessagePublisher.IntegrationMessages.Count}");
             await _integrationMessagePublisher.Publish();
         }
 

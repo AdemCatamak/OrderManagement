@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using MassTransit;
 using OrderManagement.Business.Clients;
@@ -7,6 +8,7 @@ using OrderManagement.Business.Domain.OrderStateMachineSection.Enums;
 using OrderManagement.Business.ExternalEvents.PaymentEvents;
 using OrderManagement.Business.ExternalEvents.ShipmentEvents;
 using OrderManagement.Utility.DistributedLockSection;
+using OrderManagement.Utility.IntegrationMessagePublisherSection;
 
 namespace OrderManagement.Consumers
 {
@@ -27,15 +29,18 @@ namespace OrderManagement.Consumers
         private readonly IDistributedLockManager _distributedLockManager;
         private readonly IOrderStateMachineFactory _orderStateMachineFactory;
         private readonly IShipmentServiceClient _shipmentServiceClient;
+        private readonly IIntegrationMessagePublisher _integrationMessagePublisher;
 
         public OrderStateOrchestrator(IPaymentServiceClient paymentServiceClient,
                                       IDistributedLockManager distributedLockManager,
                                       IOrderStateMachineFactory orderStateMachineFactory,
-                                      IShipmentServiceClient shipmentServiceClient)
+                                      IShipmentServiceClient shipmentServiceClient,
+                                      IIntegrationMessagePublisher integrationMessagePublisher)
         {
             _distributedLockManager = distributedLockManager;
             _orderStateMachineFactory = orderStateMachineFactory;
             _shipmentServiceClient = shipmentServiceClient;
+            _integrationMessagePublisher = integrationMessagePublisher;
             _paymentServiceClient = paymentServiceClient;
         }
 
@@ -70,6 +75,7 @@ namespace OrderManagement.Consumers
                                                     {
                                                         IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
                                                         orderStateMachine.ChangePaymentStatus(PaymentStatuses.Completed);
+                                                        Console.WriteLine($"Consumer - {nameof(PaymentCompletedEvent)} : {_integrationMessagePublisher.IntegrationMessages.Count}");
                                                     });
         }
 

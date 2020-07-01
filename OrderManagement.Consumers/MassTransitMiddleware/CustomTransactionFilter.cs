@@ -16,20 +16,14 @@ namespace OrderManagement.Consumers.MassTransitMiddleware
     {
         public async Task Send(ConsumerConsumeContext<TConsumer> context, IPipe<ConsumerConsumeContext<TConsumer>> next)
         {
-            if (context.TryGetPayload(out IServiceProvider serviceProvider))
-            {
-                var dataContext = serviceProvider.GetRequiredService<DataContext>();
-                var integrationMessagePublisher = serviceProvider.GetRequiredService<IIntegrationMessagePublisher>();
+            var serviceProvider = context.GetPayload<IServiceProvider>();
+            var dataContext = serviceProvider.GetRequiredService<DataContext>();
+            var integrationMessagePublisher = serviceProvider.GetRequiredService<IIntegrationMessagePublisher>();
 
-                IDbContextTransaction dbContextTransaction = await dataContext.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
-                await next.Send(context);
-                await dbContextTransaction.CommitAsync();
-                await integrationMessagePublisher.Publish();
-            }
-            else
-            {
-                await next.Send(context);
-            }
+            IDbContextTransaction dbContextTransaction = await dataContext.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
+            await next.Send(context);
+            await dbContextTransaction.CommitAsync();
+            await integrationMessagePublisher.Publish();
         }
 
         public void Probe(ProbeContext context)

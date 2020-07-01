@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using MassTransit;
 using OrderManagement.Business.Clients;
@@ -29,7 +28,6 @@ namespace OrderManagement.Consumers
         private readonly IDistributedLockManager _distributedLockManager;
         private readonly IOrderStateMachineFactory _orderStateMachineFactory;
         private readonly IShipmentServiceClient _shipmentServiceClient;
-        private readonly IIntegrationMessagePublisher _integrationMessagePublisher;
 
         public OrderStateOrchestrator(IPaymentServiceClient paymentServiceClient,
                                       IDistributedLockManager distributedLockManager,
@@ -40,7 +38,6 @@ namespace OrderManagement.Consumers
             _distributedLockManager = distributedLockManager;
             _orderStateMachineFactory = orderStateMachineFactory;
             _shipmentServiceClient = shipmentServiceClient;
-            _integrationMessagePublisher = integrationMessagePublisher;
             _paymentServiceClient = paymentServiceClient;
         }
 
@@ -75,7 +72,6 @@ namespace OrderManagement.Consumers
                                                     {
                                                         IOrderStateMachine orderStateMachine = await _orderStateMachineFactory.BuildOrderStateMachineAsync(orderId);
                                                         orderStateMachine.ChangePaymentStatus(PaymentStatuses.Completed);
-                                                        Console.WriteLine($"Consumer - {nameof(PaymentCompletedEvent)} : {_integrationMessagePublisher.IntegrationMessages.Count}");
                                                     });
         }
 

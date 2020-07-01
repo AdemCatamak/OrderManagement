@@ -92,11 +92,14 @@ namespace OrderManagement
             // services.AddSingleton<ISendObserver, BasicSendObserver>();
             // services.AddSingleton<IPublishObserver, BasicPublishObserver>();
 
-            services.AddScoped(typeof(TransactionFilter<>));
             services.AddMassTransitHostedService();
             services.AddMassTransit(x =>
                                     {
-                                        x.AddConsumers(typeof(OrderStateOrchestrator).Assembly);
+                                        x.AddConsumer<OrderStateOrchestrator>(
+                                                                              configurator => configurator
+                                                                                 .UseFilter(new CustomTransactionFilter<OrderStateOrchestrator>())
+                                                                              )
+                                         .Endpoint(configurator => { configurator.Name = $"{Program.STARTUP_PROJECT_NAME}.{nameof(OrderStateOrchestrator)}"; });
 
                                         switch (massTransitOption.BrokerType)
                                         {
@@ -112,9 +115,7 @@ namespace OrderManagement
                                                                              });
                                                                     cfg.UseConcurrencyLimit(massTransitConfigModel.ConcurrencyLimit);
                                                                     cfg.UseRetry(retryConfigurator => retryConfigurator.SetRetryPolicy(filter => filter.Incremental(massTransitConfigModel.RetryLimitCount, TimeSpan.FromSeconds(massTransitConfigModel.InitialIntervalSeconds), TimeSpan.FromSeconds(massTransitConfigModel.IntervalIncrementSeconds))));
-                                                                    cfg.UseConsumeFilter(typeof(TransactionFilter<>), context);
-                                                                    cfg.ReceiveEndpoint($"{Program.STARTUP_PROJECT_NAME}.{nameof(OrderStateOrchestrator)}",
-                                                                                        endpointConfigurator => { endpointConfigurator.ConfigureConsumer<OrderStateOrchestrator>(context); });
+                                                                    cfg.ConfigureEndpoints(context);
                                                                 });
                                                 break;
                                             default:

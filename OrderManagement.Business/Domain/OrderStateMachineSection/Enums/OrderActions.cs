@@ -11,6 +11,10 @@ namespace OrderManagement.Business.Domain.OrderStateMachineSection.Enums
         ChangeShipmentStatus = 31,
 
         SetAsRefundStarted = 40,
-        SetAsRefundCompleted = 41
+        SetAsRefundCompleted = 41,
+        
+        SetAsOrderCompleted = 50,
+        
+        SetAsOrderClosed = 60
     }
 }

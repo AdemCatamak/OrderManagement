@@ -54,12 +54,20 @@ namespace OrderManagement.Business.Domain.OrderStateMachineSection
             _orderStateMachine.Configure(OrderStates.OrderShipped)
                               .PermitDynamic(_changeShipmentStatusTrigger, SetShipmentStatus);
 
+            _orderStateMachine.Configure(OrderStates.ShipmentDelivered)
+                              .OnEntry(OnShipmentDelivered)
+                              .Permit(OrderActions.SetAsOrderCompleted, OrderStates.OrderCompleted);
+
             _orderStateMachine.Configure(OrderStates.ShipmentReturned)
                               .OnEntry(OnShipmentReturned)
                               .Permit(OrderActions.SetAsRefundStarted, OrderStates.RefundStarted);
 
             _orderStateMachine.Configure(OrderStates.RefundStarted)
                               .Permit(OrderActions.SetAsRefundCompleted, OrderStates.RefundCompleted);
+
+            _orderStateMachine.Configure(OrderStates.RefundCompleted)
+                              .OnEntry(OnRefundCompleted)
+                              .Permit(OrderActions.SetAsOrderClosed, OrderStates.OrderClosed);
 
             _orderStateMachine.OnTransitioned(transition =>
                                               {
@@ -68,7 +76,6 @@ namespace OrderManagement.Business.Domain.OrderStateMachineSection
                                               });
             _orderStateMachine.OnUnhandledTrigger((states, actions) => throw new InvalidStatusTransitionException(states.ToString(), actions.ToString()));
         }
-
 
         private void OnSubmitted()
         {
@@ -100,9 +107,20 @@ namespace OrderManagement.Business.Domain.OrderStateMachineSection
                    };
         }
 
+
+        private void OnShipmentDelivered()
+        {
+            _orderStateMachine.Fire(OrderActions.SetAsOrderCompleted);
+        }
+
         private void OnShipmentReturned()
         {
             _integrationMessagePublisher.AddMessage(new RefundCommand(_orderModel.Id.ToString()));
+        }
+
+        private void OnRefundCompleted()
+        {
+            _orderStateMachine.Fire(OrderActions.SetAsOrderClosed);
         }
 
         public OrderStates CurrentState => _orderStateMachine.State;

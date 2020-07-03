@@ -16,5 +16,8 @@ namespace OrderManagement.Business.Domain.OrderStateMachineSection.Enums
 
         RefundStarted = 40,
         RefundCompleted = 41,
+        
+        OrderClosed = 50,
+        OrderCompleted = 60
     }
 }

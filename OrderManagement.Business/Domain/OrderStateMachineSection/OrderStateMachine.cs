@@ -51,6 +51,10 @@ namespace OrderManagement.Business.Domain.OrderStateMachineSection
                               .PermitReentry(OrderActions.ChangePaymentStatus)
                               .Permit(OrderActions.SetAsOrderShipped, OrderStates.OrderShipped);
 
+            _orderStateMachine.Configure(OrderStates.PaymentFailed)
+                              .OnEntry(OnPaymentFailed)
+                              .Permit(OrderActions.SetAsOrderClosed, OrderStates.OrderClosed);
+
             _orderStateMachine.Configure(OrderStates.OrderShipped)
                               .PermitDynamic(_changeShipmentStatusTrigger, SetShipmentStatus);
 
@@ -95,6 +99,11 @@ namespace OrderManagement.Business.Domain.OrderStateMachineSection
         private void OnPaymentCompleted()
         {
             _integrationMessagePublisher.AddMessage(new PrepareShipmentCommand(_orderModel.Id.ToString(), _orderModel.BuyerName, _orderModel.BuyerAddress));
+        }
+
+        private void OnPaymentFailed()
+        {
+            _orderStateMachine.Fire(OrderActions.SetAsOrderClosed);
         }
 
         private OrderStates SetShipmentStatus(ShipmentStatuses shipmentStatus)

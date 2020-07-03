@@ -7,7 +7,6 @@ using OrderManagement.Business.Domain.OrderStateMachineSection.Enums;
 using OrderManagement.Business.ExternalEvents.PaymentEvents;
 using OrderManagement.Business.ExternalEvents.ShipmentEvents;
 using OrderManagement.Utility.DistributedLockSection;
-using OrderManagement.Utility.IntegrationMessagePublisherSection;
 
 namespace OrderManagement.Consumers
 {
@@ -32,8 +31,7 @@ namespace OrderManagement.Consumers
         public OrderStateOrchestrator(IPaymentServiceClient paymentServiceClient,
                                       IDistributedLockManager distributedLockManager,
                                       IOrderStateMachineFactory orderStateMachineFactory,
-                                      IShipmentServiceClient shipmentServiceClient,
-                                      IIntegrationMessagePublisher integrationMessagePublisher)
+                                      IShipmentServiceClient shipmentServiceClient)
         {
             _distributedLockManager = distributedLockManager;
             _orderStateMachineFactory = orderStateMachineFactory;

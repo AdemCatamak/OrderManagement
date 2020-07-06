@@ -1,0 +1,37 @@
+version: "3.4"
+
+services:
+
+  order-management-app:
+    image: order-management:latest
+    build:
+      context: ./
+      dockerfile: order-management.Dockerfile
+    ports:
+      - 2000:80
+    depends_on:
+      - order-management-sql-server
+      - order-management-rabbit-mq
+    links:
+      - order-management-sql-server
+      - order-management-rabbit-mq
+
+  order-management-sql-server:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "Passw0rd"
+    expose:
+      - 1433
+    ports:
+      - 2001:1433
+
+  order-management-rabbit-mq:
+    build:
+      context: ./
+      dockerfile: order-management-rabbit-mq.Dockerfile
+    expose:
+      - 15672
+      - 5672
+    ports:
+      - 2002:15672

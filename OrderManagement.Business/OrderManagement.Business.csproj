@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\OrderManagement.Data\OrderManagement.Data.csproj" />
+      <ProjectReference Include="..\OrderManagement.Exceptions\OrderManagement.Exceptions.csproj" />
+      <ProjectReference Include="..\OrderManagement.Utility\OrderManagement.Utility.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Stateless" Version="5.1.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Domain" />
+      <Folder Include="Events" />
+    </ItemGroup>
+
+</Project>

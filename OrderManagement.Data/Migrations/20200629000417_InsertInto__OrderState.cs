@@ -16,6 +16,8 @@ namespace OrderManagement.Data.Migrations
             Insert(migrationBuilder, 32, "ShipmentReturned");
             Insert(migrationBuilder, 40, "RefundStarted");
             Insert(migrationBuilder, 41, "RefundCompleted");
+            Insert(migrationBuilder, 50, "OrderClosed");
+            Insert(migrationBuilder, 60, "OrderCompleted");
         }
 
         private void Insert(MigrationBuilder migrationBuilder, int id, string stateName)
@@ -36,6 +38,8 @@ namespace OrderManagement.Data.Migrations
             Delete(migrationBuilder, 32);
             Delete(migrationBuilder, 40);
             Delete(migrationBuilder, 41);
+            Delete(migrationBuilder, 50);
+            Delete(migrationBuilder, 60);
         }
 
         private void Delete(MigrationBuilder migrationBuilder, int id)

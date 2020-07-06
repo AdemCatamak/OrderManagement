@@ -24,8 +24,7 @@ namespace OrderManagement.Business.Domain.OrderStateMachineSection
         private readonly StateMachine<OrderStates, OrderActions>.TriggerWithParameters<ShipmentStatuses> _changeShipmentStatusTrigger;
 
         #endregion
-
-
+        
         public OrderStateMachine(OrderModel orderModel, IIntegrationMessagePublisher integrationMessagePublisher, DataContext dataContext)
         {
             _integrationMessagePublisher = integrationMessagePublisher;
@@ -81,6 +80,8 @@ namespace OrderManagement.Business.Domain.OrderStateMachineSection
             _orderStateMachine.OnUnhandledTrigger((states, actions) => throw new InvalidStatusTransitionException(states.ToString(), actions.ToString()));
         }
 
+        #region OnStateChange
+
         private void OnSubmitted()
         {
             _integrationMessagePublisher.AddMessage(new TakePaymentCommand(_orderModel.Id.ToString(), _orderModel.TotalAmount));
@@ -116,7 +117,6 @@ namespace OrderManagement.Business.Domain.OrderStateMachineSection
                    };
         }
 
-
         private void OnShipmentDelivered()
         {
             _orderStateMachine.Fire(OrderActions.SetAsOrderCompleted);
@@ -131,6 +131,8 @@ namespace OrderManagement.Business.Domain.OrderStateMachineSection
         {
             _orderStateMachine.Fire(OrderActions.SetAsOrderClosed);
         }
+
+        #endregion
 
         public OrderStates CurrentState => _orderStateMachine.State;
         public OrderResponse OrderResponse => _orderModel.ToOrderResponse();

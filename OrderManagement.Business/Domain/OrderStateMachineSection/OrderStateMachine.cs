@@ -82,7 +82,7 @@ namespace OrderManagement.Business.Domain.OrderStateMachineSection
             _orderStateMachine.OnUnhandledTrigger((states, actions) => throw new InvalidStatusTransitionException(states.ToString(), actions.ToString()));
         }
 
-        #region OnStateChange
+        #region OnStateChanged
 
         private void OnSubmitted()
         {

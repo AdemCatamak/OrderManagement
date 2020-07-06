@@ -27,6 +27,8 @@ ProjectSection(SolutionItems) = preProject
 	NuGet.config = NuGet.config
 	ReadMe.md = ReadMe.md
 	.config\dotnet-tools.json = .config\dotnet-tools.json
+	.gitattributes = .gitattributes
+	.gitignore = .gitignore
 EndProjectSection
 EndProject
 Global

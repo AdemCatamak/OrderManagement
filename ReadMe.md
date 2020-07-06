@@ -1,7 +1,9 @@
 
 # Order Management
 
-This project is designed for managing order operations.
+This project is designed for managing order operations by using state machine.
+
+<img src="./images/state-diagram.png" alt="" width="800px"/>
 
 ## __RUN__
 
@@ -23,4 +25,6 @@ Changes to be made are:
 3. MassTransitConfig -> MassTransitOptions -> HostName, VirtualHost, Username, Password values should be changed with the RabbitMq platform information that you have.
 
 In the first item if the connection string information is invalid, application will crash immediately. In order to check if the remaining settings are valid, you can use http://localhost:5000/healthchecks-ui endpoint.
+
+<img src="./images/health-checks-ui.png" alt="" width="800px"/>
 

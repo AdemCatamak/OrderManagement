@@ -21,6 +21,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderManagement.Utility", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderManagement.Consumers", "OrderManagement.Consumers\OrderManagement.Consumers.csproj", "{B5B250D1-BE76-4E47-A1DB-1CBB547A1CB7}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFolder", "SolutionFolder", "{83FF3FC0-19CD-4975-AEA3-30DABF2F1122}"
+ProjectSection(SolutionItems) = preProject
+	global.json = global.json
+	NuGet.config = NuGet.config
+	ReadMe.md = ReadMe.md
+	.config\dotnet-tools.json = .config\dotnet-tools.json
+EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

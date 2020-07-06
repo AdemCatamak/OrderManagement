@@ -24,8 +24,10 @@ namespace OrderManagement.Business.Domain.OrderStateMachineSection
         private readonly StateMachine<OrderStates, OrderActions>.TriggerWithParameters<ShipmentStatuses> _changeShipmentStatusTrigger;
 
         #endregion
-        
-        public OrderStateMachine(OrderModel orderModel, IIntegrationMessagePublisher integrationMessagePublisher, DataContext dataContext)
+
+        public OrderStateMachine(OrderModel orderModel,
+                                 IIntegrationMessagePublisher integrationMessagePublisher,
+                                 DataContext dataContext)
         {
             _integrationMessagePublisher = integrationMessagePublisher;
 
@@ -134,6 +136,8 @@ namespace OrderManagement.Business.Domain.OrderStateMachineSection
 
         #endregion
 
+        #region InterfaceSection
+
         public OrderStates CurrentState => _orderStateMachine.State;
         public OrderResponse OrderResponse => _orderModel.ToOrderResponse();
 
@@ -171,5 +175,8 @@ namespace OrderManagement.Business.Domain.OrderStateMachineSection
         {
             _orderStateMachine.Fire(OrderActions.SetAsRefundCompleted);
         }
+
+        #endregion
     }
 }
+
